@@ -1,4 +1,6 @@
-﻿using System.Collections;
+// 将此文件添加到camera属性运行即可开始井字棋游戏
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
