@@ -1,1 +1,49 @@
+# 简答题
+---
 
+ 游戏对象运动的本质是什么？
+----
+> 游戏对象的运动本质就是GameObject的**position**及**rotation**发生变化
+
+---
+ 请用三种方法以上方法，实现物体的抛物线运动。（如，修改Transform属性，使用向量Vector3的方法…）
+---
+
+
+1.修改position
+
+```c#
+void Update () {  
+        speed = g * (dTime += Time.DelteTime); // g为重力加速度
+        this.transform.position += Vector3.down * Time.DeltaTime * speed;  
+        this.transform.position += Vector3.right * Time.DeltaTime * 5;  
+        speed++;  
+    }
+```
+
+
+2.使用向量Vector3的方法
+
+``` c#
+void Update () {  
+        speed = g * (dTime += Time.DelteTime); // g为重力加速度
+        Vector3 change = new Vector3( Time.deltaTime * 5,
+                                        -Time.deltaTime * speed, 0);  
+        this.transform.position += change;  
+    }  
+```
+
+3.使用translate（）
+
+```c#
+  void Update () {
+            speed = g * (dTime += Time.DelteTime); // g为重力加速度
+            transform.Translate(Vector3.right * 5 * Time.DeltaTime, Space.World);
+            transform.Translate(Vector3.down * speed * Time.fixedDeltaTime, Space.World);
+    }
+```
+
+---
+写一个程序，实现一个完整的太阳系， 其他星球围绕太阳的转速必须不一样，且不在一个法平面上。
+---
+具体代码文件及演示视频见Homework2/SolarSystem
