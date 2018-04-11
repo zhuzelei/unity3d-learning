@@ -1,222 +1,195 @@
-﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using System.Collections;
+using UnityEngine.SceneManagement;
+using Com.Mygame;
 
-
-
-namespace Com.MyGame
+namespace Com.Mygame
 {
-    public class Direction
+   
+    public interface UserActions
     {
-        public static bool left = true;
-        public static bool right = false;
+        void priestSOnB();
+        void priestEOnB();
+        void devilSOnB();
+        void devilEOnB();
+        void moveBoat();
+        void offBoatL();
+        void offBoatR();
+        void restart();
     }
-    public class Operation
+   
+    public interface QueryGameStatus
     {
-        public static bool Add = true;
-        public static bool Sub = false;
+        bool isMoving();
+        void setMoving(bool state);
+        string getMessage();
+        void setMessage(string message);
     }
-    public class StartLocation
+   
+    public class GameSceneController : System.Object, UserActions, QueryGameStatus
     {
-        public static Vector3 Pri1 = new Vector3(8, 1, 3);
-        public static Vector3 Pri2 = new Vector3(10, 1, 3);
-        public static Vector3 Pri3 = new Vector3(12, 1, 3);
-        public static Vector3 Dev1 = new Vector3(8, 1, 6);
-        public static Vector3 Dev2 = new Vector3(10, 1, 6);
-        public static Vector3 Dev3 = new Vector3(12, 1, 6);
-        public static Vector3 Land1 = new Vector3(10, 0, 5);
-        public static Vector3 Land2 = new Vector3(-10, 0, 5);
+        private static GameSceneController _instance;
+        private BaseCode _base_code;
+        private GenGameObject _gen_game_obj;
+        private bool moving = false;
+        private string message = "";
 
-        public static Vector3 Boat1 = new Vector3(4, 0, 5);
-        public static Vector3 Boat2 = new Vector3(-4, 0, 5);
-        public static Vector3 Seat1L = new Vector3(4, 1, 4);
-        public static Vector3 Seat1R = new Vector3(4, 1, 6);
-        public static Vector3 Seat2L = new Vector3(-4, 1, 4);
-        public static Vector3 Seat2R = new Vector3(-4, 1, 6);
-    }
-
-    public interface IUserActions
-    {
-        void boatMove();
-        void priestsGetOn();
-        void priestsGetOff();
-        void devilsGetOn();
-        void devilsGetOff();
-    }
-
-
-    public interface IGameJudge
-    {
-        void modifyBoatPriestsNum(bool isAdd);
-        void modifyBoatDevilsNum(bool isAdd);
-        void modifyBankPriestsNum(bool isLeftBank, bool isAdd);
-        void modifyBankDevilsNum(bool isLeftBank, bool isAdd);
-        void judgeTheGame(bool isBoatLeft);
-    }
-
-    public class mainSceneController : System.Object, IUserActions, IGameJudge
-    {
-        private static mainSceneController instance;
-        private GenGameObject myGenGameObjects;
-
-        private int BoatPriestsNum, BoatDevilsNum, BankLeftPriestsNum,
-            BankRightPriestsNum, BankLeftDevilsNum, BankRightDevilsNum;  //人员数量，用于判断游戏胜负  
-
-        public static mainSceneController getInstance()
+        public static GameSceneController GetInstance()
         {
-            if (instance == null)
-                instance = new mainSceneController();
-            return instance;
+            if (null == _instance) _instance = new GameSceneController();
+            return _instance;
         }
 
-        internal void setGenGameObjects(GenGameObject _myGenGameObjects)
+        public BaseCode getBaseCode() { return _base_code; }
+        internal void setBaseCode(BaseCode bc) { if (null == _base_code) _base_code = bc; }
+
+        public GenGameObject getGenGameObject() { return _gen_game_obj; }
+        internal void setGenGameObject(GenGameObject ggo) { if (null == _gen_game_obj) _gen_game_obj = ggo; }
+
+        public bool isMoving() { return moving; }
+        public void setMoving(bool state) { this.moving = state; }
+        public string getMessage() { return message; }
+        public void setMessage(string message) { this.message = message; }
+
+        public void priestSOnB() { _gen_game_obj.priestStartOnBoat(); }
+        public void priestEOnB() { _gen_game_obj.priestEndOnBoat(); }
+        public void devilSOnB() { _gen_game_obj.devilStartOnBoat(); }
+        public void devilEOnB() { _gen_game_obj.devilEndOnBoat(); }
+        public void moveBoat() { _gen_game_obj.moveBoat(); }
+        public void offBoatL() { _gen_game_obj.getOffTheBoat(0); }
+        public void offBoatR() { _gen_game_obj.getOffTheBoat(1); }
+
+        public void restart()
         {
-            if (myGenGameObjects == null)
+            moving = false;
+            message = "";
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+    }
+    
+    public interface ISSActionCallback
+    {
+        void OnActionCompleted(SSAction action);
+    }
+   
+    public class SSActionManager : System.Object
+    {
+        private static SSActionManager _instance;
+        public static SSActionManager GetInstance()
+        {
+            if (_instance == null) _instance = new SSActionManager();
+            return _instance;
+        }
+        
+        public SSAction ApplyCCMoveToAction(GameObject obj, Vector3 target, float speed, ISSActionCallback completed)
+        {
+            CCMoveToAction ac = obj.AddComponent<CCMoveToAction>();
+            ac.RunAction(target, speed, completed);
+            return ac;
+        }
+        public SSAction ApplyCCMoveToAction(GameObject obj, Vector3 target, float speed)
+        {
+            return ApplyCCMoveToAction(obj, target, speed, null);
+        }
+
+        public SSAction ApplyCCMoveToYZAction(GameObject obj, Vector3 target, float speed, ISSActionCallback completed)
+        {
+            CCMoveToYZAction ac = obj.AddComponent<CCMoveToYZAction>();
+            ac.RunAction(obj, target, speed, completed);
+            return ac;
+        }
+        public SSAction ApplyCCMoveToYZAction(GameObject obj, Vector3 target, float speed)
+        {
+            return ApplyCCMoveToYZAction(obj, target, speed, null);
+        }
+    }
+
+    public class SSAction : MonoBehaviour
+    {
+        public void Free() { Destroy(this); }
+    }
+
+    public class CCMoveToAction : SSAction
+    {
+        public Vector3 target;
+        public float speed;
+
+        private ISSActionCallback monitor = null;
+
+        public void RunAction(Vector3 target, float speed, ISSActionCallback monitor)
+        {
+            this.target = target;
+            this.speed = speed;
+            this.monitor = monitor;
+            GameSceneController.GetInstance().setMoving(true);
+        }
+
+        void Update()
+        {
+            float step = speed * Time.deltaTime;
+            transform.position = Vector3.MoveTowards(transform.position, target, step);
+            if (transform.position == target)
             {
-                myGenGameObjects = _myGenGameObjects;
-                BoatPriestsNum = BoatDevilsNum = BankLeftPriestsNum = BankLeftDevilsNum = 0;
-                BankRightPriestsNum = BankRightDevilsNum = 3;
+                GameSceneController.GetInstance().setMoving(false);
+                if (monitor != null) monitor.OnActionCompleted(this);
+                Destroy(this);
             }
         }
+    }
 
-        /** 
-        * 实现IUserActions接口 
-        **/
-        public void boatMove()
-        {
-            myGenGameObjects.boatMove();
-        }
+    public class CCMoveToYZAction : SSAction, ISSActionCallback
+    {
+        public GameObject obj;
+        public Vector3 target;
+        public float speed;
 
-        public void devilsGetOff()
-        {
-            myGenGameObjects.devilsGetOff();
-        }
+        private ISSActionCallback monitor = null;
 
-        public void devilsGetOn()
+        public void RunAction(GameObject obj, Vector3 target, float speed, ISSActionCallback monitor)
         {
-            myGenGameObjects.devilsGetOn();
-        }
+            this.obj = obj;
+            this.target = target;
+            this.speed = speed;
+            this.monitor = monitor;
+            GameSceneController.GetInstance().setMoving(true);
 
-        public void priestsGetOff()
-        {
-            myGenGameObjects.priestsGetOff();
-        }
-
-        public void priestsGetOn()
-        {
-            myGenGameObjects.priestsGetOn();
-        }
-        /** 
-  * 实现IGameJudge接口 
-  **/
-        public void modifyBoatPriestsNum(bool isAdd)
-        {
-            if (isAdd)
-                BoatPriestsNum++;
-            else
-                BoatPriestsNum--;
-        }
-
-        public void modifyBoatDevilsNum(bool isAdd)
-        {
-            if (isAdd)
-                BoatDevilsNum++;
-            else
-                BoatDevilsNum--;
-        }
-
-        public void modifyBankDevilsNum(bool isLeftBank, bool isAdd)
-        {
-            if (isLeftBank)
+            if (target.y < obj.transform.position.y)
             {
-                if (isAdd)
-                    BankLeftDevilsNum++;
-                else
-                    BankLeftDevilsNum--;
-            }
-            else
-            {
-                if (isAdd)
-                    BankRightDevilsNum++;
-                else
-                    BankRightDevilsNum--;
-            }
-        }
-
-        public void modifyBankPriestsNum(bool isLeftBank, bool isAdd)
-        {
-            if (isLeftBank)
-            {
-                if (isAdd)
-                    BankLeftPriestsNum++;
-                else
-                    BankLeftPriestsNum--;
-            }
-            else
-            {
-                if (isAdd)
-                    BankRightPriestsNum++;
-                else
-                    BankRightPriestsNum--;
-            }
-        }
-
-        //public static int Game = 0;
-
-        public void judgeTheGame(bool isBoatLeft)
-        {
-            if (isBoatLeft)
-            {
-                if ((BankLeftPriestsNum + BoatPriestsNum > 0
-                    && BankLeftDevilsNum + BoatDevilsNum > BankLeftPriestsNum + BoatPriestsNum)
-                    || (BankRightDevilsNum > BankRightPriestsNum && BankRightPriestsNum > 0))
-                {
-                    //Game = -1;
-                    showGameText("Failed !");
-                }
-
-                if (BankLeftDevilsNum + BoatDevilsNum == 3 && BankLeftPriestsNum + BoatPriestsNum == 3)
-                {
-                    //Game = 1;
-                    showGameText("Victory !");
-                }
+                Vector3 targetZ = new Vector3(target.x, obj.transform.position.y, target.z);
+                SSActionManager.GetInstance().ApplyCCMoveToAction(obj, targetZ, speed, this);
             }
             else
             {
-                if ((BankRightPriestsNum + BoatPriestsNum > 0
-                    && BankRightDevilsNum + BoatDevilsNum > BankRightPriestsNum + BoatPriestsNum)
-                    || (BankLeftDevilsNum > BankLeftPriestsNum && BankLeftPriestsNum > 0))
-                {
-                    //Game = -1;
-                    showGameText("Failed !");
-                }
+                Vector3 targetY = new Vector3(target.x, target.y, obj.transform.position.z);
+                SSActionManager.GetInstance().ApplyCCMoveToAction(obj, targetY, speed, this);
             }
         }
 
-
-        void showGameText(string textContent)
+        public void OnActionCompleted(SSAction action)
         {
-            GameObject Canvas = Camera.Instantiate(Resources.Load("Canvas")) as GameObject;
-            GameObject GameText = Camera.Instantiate(Resources.Load("GameText"), Canvas.transform) as GameObject;
-            GameText.transform.position = Canvas.transform.position;
-            GameText.GetComponent<Text>().text = textContent;
+            SSActionManager.GetInstance().ApplyCCMoveToAction(obj, target, speed, null);
+        }
+
+        void Update()
+        {
+            if (obj.transform.position == target)
+            {
+                GameSceneController.GetInstance().setMoving(false);
+                if (monitor != null) monitor.OnActionCompleted(this);
+                Destroy(this);
+            }
         }
     }
-}  
+}
+
+public class BaseCode : MonoBehaviour
+{
     
 
+    void Start()
+    {
+        GameSceneController my = GameSceneController.GetInstance();
+        my.setBaseCode(this);
 
-public class BaseCode : MonoBehaviour {
-
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
-
+    }
 }
