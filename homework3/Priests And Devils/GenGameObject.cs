@@ -1,243 +1,182 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
-using Com.MyGame;
 using System.Collections.Generic;
+using Com.Mygame;
 
 public class GenGameObject : MonoBehaviour
 {
-    public List<GameObject> Priests, Devils;
-    public GameObject boat, bankLeft, bankRight;
-
-    private BoatBehaviour myBoatBehaviour;
-
+    Stack<GameObject> priests_start = new Stack<GameObject>();
+    Stack<GameObject> priests_end = new Stack<GameObject>();
+    Stack<GameObject> devils_start = new Stack<GameObject>();
+    Stack<GameObject> devils_end = new Stack<GameObject>();
+    
+    GameObject[] boat = new GameObject[2];
+    GameObject boat_obj;
+    int side = 1;
+    public float speed = 6f;
+    float gap = 1.2f;
+    
+    Vector3 shoreStartPos = new Vector3(-19, 0, 0);
+    Vector3 shoreEndPos = new Vector3(8, 0, 0);
+    Vector3 boatStartPos = new Vector3(-11, 0, 0);
+    Vector3 boatEndPos = new Vector3(-1, 0, 0);
+    Vector3 priestStartPos = new Vector3(-17, 2f, 0);
+    Vector3 priestEndPos = new Vector3(4, 2f, 0);
+    Vector3 devilStartPos = new Vector3(-23, 2f, 0);
+    Vector3 devilEndPos = new Vector3(10, 2f, 0);
+   
     void Start()
     {
-        Priests = new List<GameObject>();
-        
-        for (int i = 0; i < 3; i++)
+        GameSceneController.GetInstance().setGenGameObject(this);
+        Instantiate(Resources.Load("Directional Light"));
+        Instantiate(Resources.Load("Land"), shoreStartPos, Quaternion.identity);
+        Instantiate(Resources.Load("Land"), shoreEndPos, Quaternion.identity);
+        boat_obj = Instantiate(Resources.Load("Boat"), boatStartPos, Quaternion.identity) as GameObject;
+        for (int i = 0; i < 3; ++i)
         {
-            GameObject priests = (GameObject)Instantiate(Resources.Load("Priest"));
-            priests.name = "Priest " + (i + 1);
-            priests.AddComponent<PersonStatus>();
-            Priests.Add(priests);
+            GameObject priest = Instantiate(Resources.Load("Priest")) as GameObject;
+            priest.transform.position = getCharacterPosition(priestStartPos, i);
+            priests_start.Push(priest);
+            GameObject devil = Instantiate(Resources.Load("Devil")) as GameObject;
+            devil.transform.position = getCharacterPosition(devilStartPos, i);
+            devils_start.Push(devil);
         }
-        
-        Priests[0].transform.position = StartLocation.Pri1;
-        Priests[1].transform.position = StartLocation.Pri2;
-        Priests[2].transform.position = StartLocation.Pri3;
-
-        Devils = new List<GameObject>();
-        for (int i = 0; i < 3; i++)
+    }
+    
+    int boatCapacity()
+    {
+        int capacity = 0;
+        for (int i = 0; i < 2; ++i)
+            if (boat[i] == null) capacity++;
+        return capacity;
+    }
+    
+    void getOnTheBoat(GameObject obj)
+    {
+        if (boatCapacity() != 0)
         {
-            GameObject devils = (GameObject)Instantiate(Resources.Load("Devil"));
-            devils.name = "Devil " + (i + 1);
-            devils.AddComponent<PersonStatus>();
-            Devils.Add(devils);
+            obj.transform.parent = boat_obj.transform;
+            Vector3 target = new Vector3();
+            if (boat[0] == null)
+            {
+                boat[0] = obj;
+                target = boat_obj.transform.position + new Vector3(-0.8f, 1.2f, 0);
+            }
+            else
+            {
+                boat[1] = obj;
+                target = boat_obj.transform.position + new Vector3(0.8f, 1.2f, 0);
+            }
+            SSActionManager.GetInstance().ApplyCCMoveToYZAction(obj, target, speed);
         }
-        Devils[0].transform.position = StartLocation.Dev1;
-        Devils[1].transform.position = StartLocation.Dev2;
-        Devils[2].transform.position = StartLocation.Dev3;
-
-        boat = (GameObject)Instantiate(Resources.Load("Boat"));
-        boat.name = "Boat";
-        boat.AddComponent<BoatBehaviour>();
-        myBoatBehaviour = boat.GetComponent<BoatBehaviour>();
-        //boat.transform.localScale = new Vector3(3, 1, 1);
-        boat.transform.position = StartLocation.Boat1;
-
-        bankLeft = (GameObject)Instantiate(Resources.Load("Land"));
-        bankLeft.name = "BankLeft";
-        //bankLeft.transform.Rotate(new Vector3(0, 0, 90));
-        //bankLeft.transform.localScale = new Vector3(1, 4, 1);
-        bankLeft.transform.position = StartLocation.Land2;
-
-        bankRight = (GameObject)Instantiate(Resources.Load("Land"));
-        bankRight.name = "BankRight";
-        //bankRight.transform.Rotate(new Vector3(0, 0, 90));
-        //bankRight.transform.localScale = new Vector3(1, 4, 1);
-        bankRight.transform.position = StartLocation.Land1;
-
-        mainSceneController.getInstance().setGenGameObjects(this);
+    }
+ 
+    public void moveBoat()
+    {
+        if (boatCapacity() != 2)
+        {
+            if (side == 1)
+            {
+                SSActionManager.GetInstance().ApplyCCMoveToAction(boat_obj, boatEndPos, speed);
+                side = 2;
+            }
+            else if (side == 2)
+            {
+                SSActionManager.GetInstance().ApplyCCMoveToAction(boat_obj, boatStartPos, speed);
+                side = 1;
+            }
+        }
+    }
+    
+    public void getOffTheBoat(int bside)
+    {
+        if (boat[bside] != null)
+        {
+            boat[bside].transform.parent = null;
+            Vector3 target = new Vector3();
+            if (side == 1)
+            {
+                if (boat[bside].tag == "Priest")
+                {
+                    priests_start.Push(boat[bside]);
+                    target = getCharacterPosition(priestStartPos, priests_start.Count - 1);
+                }
+                else if (boat[bside].tag == "Devil")
+                {
+                    devils_start.Push(boat[bside]);
+                    target = getCharacterPosition(devilStartPos, devils_start.Count - 1);
+                }
+            }
+            else if (side == 2)
+            {
+                if (boat[bside].tag == "Priest")
+                {
+                    priests_end.Push(boat[bside]);
+                    target = getCharacterPosition(priestEndPos, priests_end.Count - 1);
+                }
+                else if (boat[bside].tag == "Devil")
+                {
+                    devils_end.Push(boat[bside]);
+                    target = getCharacterPosition(devilEndPos, devils_end.Count - 1);
+                }
+            }
+            SSActionManager.GetInstance().ApplyCCMoveToYZAction(boat[bside], target, speed);
+            boat[bside] = null;
+        }
+    }
+    
+    public void priestStartOnBoat()
+    {
+        if (priests_start.Count != 0 && boatCapacity() != 0 && side == 1) getOnTheBoat(priests_start.Pop());
+    }
+    public void priestEndOnBoat()
+    {
+        if (priests_end.Count != 0 && boatCapacity() != 0 && side == 2) getOnTheBoat(priests_end.Pop());
+    }
+    public void devilStartOnBoat()
+    {
+        if (devils_start.Count != 0 && boatCapacity() != 0 && side == 1) getOnTheBoat(devils_start.Pop());
+    }
+    public void devilEndOnBoat()
+    {
+        if (devils_end.Count != 0 && boatCapacity() != 0 && side == 2) getOnTheBoat(devils_end.Pop());
     }
 
+    
+    Vector3 getCharacterPosition(Vector3 pos, int index) { return new Vector3(pos.x + gap * index, pos.y, pos.z); }
+
+    
     void Update()
     {
+        GameSceneController scene = GameSceneController.GetInstance();
+        int pOnb = 0, dOnb = 0;
+        int priests_s = 0, devils_s = 0, priests_e = 0, devils_e = 0;
 
-    }
-
-    public void boatMove()
-    {
-        myBoatBehaviour.setBoatMove();
-    }
-
-    //牧师上船  
-    public void priestsGetOn()
-    {
-        if (myBoatBehaviour.isMoving)
-            return;
-
-        if (!myBoatBehaviour.isBoatAtLeftSide())
-        {  //船在右侧  
-            for (int i = 0; i < Priests.Count; i++)
-            {
-                if (Priests[i].GetComponent<PersonStatus>().onBankRight)
-                {
-                    //右侧岸上有牧师  
-                    detectEmptySeat(true, i, Direction.right);
-                    break;
-                }
-            }
-        }
-        else
-        {  //船在左侧  
-            for (int i = 0; i < Priests.Count; i++)
-            {
-                if (Priests[i].GetComponent<PersonStatus>().onBankLeft)
-                {
-                    //左侧岸上有牧师  
-                    detectEmptySeat(true, i, Direction.left);
-                    break;
-                }
-            }
-        }
-    }
-    //恶魔上船  
-    public void devilsGetOn()
-    {
-        if (myBoatBehaviour.isMoving)
-            return;
-
-        if (!myBoatBehaviour.isBoatAtLeftSide())
-        {  //船在右侧  
-            for (int i = 0; i < Devils.Count; i++)
-            {
-                if (Devils[i].GetComponent<PersonStatus>().onBankRight)
-                {
-                    //右侧岸上有恶魔  
-                    detectEmptySeat(false, i, Direction.right);
-                    break;
-                }
-            }
-        }
-        else
-        {  //船在左侧  
-            for (int i = 0; i < Devils.Count; i++)
-            {
-                if (Devils[i].GetComponent<PersonStatus>().onBankLeft)
-                {
-                    //左侧岸上有恶魔  
-                    detectEmptySeat(false, i, Direction.left);
-                    break;
-                }
-            }
-        }
-    }
-    //当岸上有牧师/恶魔的时候，检测船上是否有空位  
-    void detectEmptySeat(bool isPriests, int index, bool boatDir)
-    {
-        if (myBoatBehaviour.isLeftSeatEmpty())
-        {        //船上左位置没人  
-            seatThePersonAndModifyBoat(isPriests, index, boatDir, Direction.left);
-        }
-        else if (myBoatBehaviour.isRightSeatEmpty())
-        {  //船上左位置有人，右位置没人  
-            seatThePersonAndModifyBoat(isPriests, index, boatDir, Direction.right);
-        }
-    }
-    //牧师/恶魔上船，并调整船的属性  
-    void seatThePersonAndModifyBoat(bool isPriests, int index, bool boatDir, bool seatDir)
-    {
-        if (isPriests)
+        if (priests_end.Count == 3 && devils_end.Count == 3)
         {
-            Priests[index].GetComponent<PersonStatus>().personSeatOnBoat(boatDir, seatDir);
-            Priests[index].transform.parent = boat.transform;
-        }
-        else
-        {
-            Devils[index].GetComponent<PersonStatus>().personSeatOnBoat(boatDir, seatDir);
-            Devils[index].transform.parent = boat.transform;
-        }
-        myBoatBehaviour.seatOnPos(seatDir);
-    }
-
-
-    //牧师下船  
-    public void priestsGetOff()
-    {
-        if (myBoatBehaviour.isMoving)
+            scene.setMessage("Win!");
             return;
+        }
 
-        if (!myBoatBehaviour.isBoatAtLeftSide())
-        {  //船在右侧  
-            for (int i = Priests.Count - 1; i >= 0; i--)
-            {
-                if (detectIfPeopleOnBoat(true, i, Direction.right))
-                    break;
-            }
-        }
-        else
-        {  //船在左侧  
-            for (int i = Priests.Count - 1; i >= 0; i--)
-            {
-                if (detectIfPeopleOnBoat(true, i, Direction.left))
-                    break;
-            }
-        }
-    }
-    //恶魔下船  
-    public void devilsGetOff()
-    {
-        if (myBoatBehaviour.isMoving)
-            return;
-
-        if (!myBoatBehaviour.isBoatAtLeftSide())
-        {  //船在右侧  
-            for (int i = Devils.Count - 1; i >= 0; i--)
-            {
-                if (detectIfPeopleOnBoat(false, i, Direction.right))
-                    break;
-            }
-        }
-        else
-        {  //船在左侧  
-            for (int i = Devils.Count - 1; i >= 0; i--)
-            {
-                if (detectIfPeopleOnBoat(false, i, Direction.left))
-                    break;
-            }
-        }
-    }
-    //检测是否有牧师/恶魔在船上  
-    bool detectIfPeopleOnBoat(bool isPriests, int i, bool boatDir)
-    {
-        if (isPriests)
+        for (int i = 0; i < 2; ++i)
         {
-            if (Priests[i].GetComponent<PersonStatus>().onBoatLeft
-            || Priests[i].GetComponent<PersonStatus>().onBoatRight)
-            {
-                //在船上  
-                myBoatBehaviour.jumpOutOfPos(Priests[i].GetComponent<PersonStatus>().onBoatLeft);
-                Priests[i].GetComponent<PersonStatus>().landTheBank(boatDir);
-                Priests[i].transform.parent = boat.transform.parent;
-
-                return true;
-            }
-            return false;
+            if (boat[i] != null && boat[i].tag == "Priest") pOnb++;
+            else if (boat[i] != null && boat[i].tag == "Devil") dOnb++;
         }
-        else
+        if (side == 1)
         {
-            if (Devils[i].GetComponent<PersonStatus>().onBoatLeft
-            || Devils[i].GetComponent<PersonStatus>().onBoatRight)
-            {
-                //在船上  
-                myBoatBehaviour.jumpOutOfPos(Devils[i].GetComponent<PersonStatus>().onBoatLeft);
-                Devils[i].GetComponent<PersonStatus>().landTheBank(boatDir);
-                Devils[i].transform.parent = boat.transform.parent;
-
-                return true;
-            }
-            return false;
+            priests_s = priests_start.Count + pOnb;
+            devils_s = devils_start.Count + dOnb;
+            priests_e = priests_end.Count;
+            devils_e = devils_end.Count;
         }
+        else if (side == 2)
+        {
+            priests_s = priests_start.Count;
+            devils_s = devils_start.Count;
+            priests_e = priests_end.Count + pOnb;
+            devils_e = devils_end.Count + dOnb;
+        }
+        if ((priests_s != 0 && priests_s < devils_s) || (priests_e != 0 && priests_e < devils_e)) scene.setMessage("Lose!");
     }
-
 }
