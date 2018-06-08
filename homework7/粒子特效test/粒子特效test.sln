@@ -1,7 +1,7 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2017
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "粒子特效test", "粒子特效test.csproj", "{89FC0168-1523-60CA-88E6-BE047D9ECD99}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "粒子特效test", "Assembly-CSharp.csproj", "{8AAB6AF0-B3C6-7665-F485-5C0FAD2E9BBE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,12 +9,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{89FC0168-1523-60CA-88E6-BE047D9ECD99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{89FC0168-1523-60CA-88E6-BE047D9ECD99}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{89FC0168-1523-60CA-88E6-BE047D9ECD99}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{89FC0168-1523-60CA-88E6-BE047D9ECD99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8AAB6AF0-B3C6-7665-F485-5C0FAD2E9BBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AAB6AF0-B3C6-7665-F485-5C0FAD2E9BBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8AAB6AF0-B3C6-7665-F485-5C0FAD2E9BBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8AAB6AF0-B3C6-7665-F485-5C0FAD2E9BBE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = Assembly-CSharp.csproj
 	EndGlobalSection
 EndGlobal
