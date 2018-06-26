@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankOnline", "Assembly-CSharp.csproj", "{0D36056B-B295-BE1C-E808-DC91BAFA8F80}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankOnline", "Assembly-CSharp-Editor.csproj", "{DD3FD747-4C54-77C8-087A-D24089EC6168}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0D36056B-B295-BE1C-E808-DC91BAFA8F80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D36056B-B295-BE1C-E808-DC91BAFA8F80}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D36056B-B295-BE1C-E808-DC91BAFA8F80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D36056B-B295-BE1C-E808-DC91BAFA8F80}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD3FD747-4C54-77C8-087A-D24089EC6168}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD3FD747-4C54-77C8-087A-D24089EC6168}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD3FD747-4C54-77C8-087A-D24089EC6168}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD3FD747-4C54-77C8-087A-D24089EC6168}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = Assembly-CSharp.csproj
+	EndGlobalSection
+EndGlobal
